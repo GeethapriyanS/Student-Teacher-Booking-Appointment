@@ -16,6 +16,22 @@
             margin-top: 20px;
             color: #333;
         }
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            width: 100px;
+            right: 20px;
+            padding: 8px 15px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .logout-btn:hover {
+            background-color: #21bd24;
+        }
         .container {
             width: 90%;
             margin: 20px auto;
@@ -73,6 +89,9 @@
 </head>
 <body>
     <h1>Admin Dashboard</h1>
+
+    <!-- Logout Button -->
+    <button class="logout-btn" id="logout">Logout</button>
 
     <div class="container">
         <h2>Add Teacher</h2>

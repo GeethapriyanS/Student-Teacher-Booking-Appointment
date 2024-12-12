@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+}
+
+nav {
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 10px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.container {
+    padding: 20px;
+}
+
+.options {
+    margin: 20px 0;
+}
+
+#content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+}
+
+h2 {
+    color: #333;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #007bff;
+    color: white;
+}
+
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav>
+        <h1>Teacher Dashboard</h1>
+        <button id="logout-btn">Logout</button>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h2>Welcome, <span id="teacher-name">Teacher</span></h2>
+
+        <div class="options">
+            <button onclick="scheduleAppointment()">Schedule Appointment</button>
+            <button onclick="viewAppointments()">View All Appointments</button>
+            <button onclick="viewMessages()">View Messages</button>
+        </div>
+
+        <div id="content">
+        </div>
+    </div>
+
+    <script src="js/teacher_dashboard.js" type="module"></script>
+</body>
+</html>

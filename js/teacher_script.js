@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getDatabase,ref,push,onValue,remove,set } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
-const appSetting = { 
+const appSetting = {
     databaseURL: "https://student-teacher-project-e28b9-default-rtdb.firebaseio.com/",
 };
 
@@ -9,10 +9,9 @@ const app = initializeApp(appSetting);
 const database = getDatabase(app);
 const UserListInDB = ref(database, "tea_users");
 
-const tea_username=document.querySelector("#tea_username");
-const tea_password=document.querySelector("#tea_password");
-const tea_frm=document.querySelector("#frm");
-
+const tea_username = document.querySelector("#tea_username");
+const tea_password = document.querySelector("#tea_password");
+const tea_frm = document.querySelector("#frm");
 
 tea_frm.addEventListener("submit", function (e) {
     e.preventDefault();
@@ -27,18 +26,26 @@ tea_frm.addEventListener("submit", function (e) {
 
     onValue(UserListInDB, function (snapshot) {
         if (snapshot.exists()) {
-            const users = snapshot.val();
             let loginSuccess = false;
+            let teacherDetails = null;
+            let teacherKey = null;
 
-            Object.values(users).forEach(user => {
-                if (user.tea_username === enteredUsername && user.tea_password === enteredPassword) {
+            snapshot.forEach((childSnapshot) => {
+                const teacher = childSnapshot.val();
+                if (teacher.tea_name === enteredUsername && teacher.tea_password === enteredPassword) {
                     loginSuccess = true;
+                    teacherDetails = teacher;
+                    teacherKey = childSnapshot.key;
                 }
             });
 
             if (loginSuccess) {
-                alert("Login Sucessful");
-                
+                alert("Login Successful");
+                sessionStorage.setItem(
+                    "teacherDetails",
+                    JSON.stringify({ key: teacherKey, ...teacherDetails })
+                );
+                window.location.href = "teacher_dashboard.html";
             } else {
                 alert("Invalid username or password.");
             }

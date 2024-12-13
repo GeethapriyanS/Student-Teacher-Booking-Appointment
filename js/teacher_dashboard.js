@@ -1,70 +1,123 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+import { getDatabase, ref, onValue, push, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
-// Firebase Initialization
 const firebaseConfig = {
-    databaseURL: "https://student-teacher-project-e28b9-default-rtdb.firebaseio.com/",
+    databaseURL: "https://student-teacher-project-e28b9-default-rtdb.firebaseio.com/"
 };
+
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// Elements
-const teacherName = document.querySelector("#teacher-name");
-const content = document.querySelector("#content");
-const logoutBtn = document.querySelector("#logout-btn");
+// Teacher Details
+const teacherDetails = JSON.parse(sessionStorage.getItem("teacherDetails")) || {};
+const teacherEmail = teacherDetails.tea_email || "";
+const teacherName = teacherDetails.tea_name || "Teacher";
+document.querySelector("#teacher-name").textContent = teacherName;
 
-// Fetch teacher details
-const teacherDetails = JSON.parse(sessionStorage.getItem("teacherDetails"));
-if (!teacherDetails) {
-    alert("Session expired. Please log in again.");
-    window.location.href = "teacher_login.html";
-} else {
-    teacherName.textContent = teacherDetails.tea_name;
-}
+// View Pending Appointments
+window.viewMessages = () => {
+    const content = document.getElementById("content");
+    content.innerHTML = "<h3>Pending Appointments</h3>";
 
-// Logout Functionality
-logoutBtn.addEventListener("click", () => {
-    sessionStorage.removeItem("teacherDetails");
-    window.location.href = "teacher_login.html";
-});
-
-// Schedule Appointment
-window.scheduleAppointment = () => {
-    const appointmentTitle = prompt("Enter appointment title:");
-    const appointmentDate = prompt("Enter appointment date (YYYY-MM-DD):");
-
-    if (appointmentTitle && appointmentDate) {
-        const appointmentsRef = ref(database, `appointments/${teacherDetails.key}`);
-        const newAppointment = { title: appointmentTitle, date: appointmentDate };
-
-        push(appointmentsRef, newAppointment)
-            .then(() => alert("Appointment scheduled successfully!"))
-            .catch((err) => console.error("Error scheduling appointment:", err));
-    }
-};
-
-// View All Appointments
-window.viewAppointments = () => {
-    const appointmentsRef = ref(database, `appointments/${teacherDetails.key}`);
+    const appointmentsRef = ref(database, "appointments");
     onValue(appointmentsRef, (snapshot) => {
-        content.innerHTML = "<h3>All Scheduled Appointments</h3>";
-        if (!snapshot.exists()) {
-            content.innerHTML += "<p>No appointments found.</p>";
-            return;
-        }
+        let hasData = false;
+        let tableContent = `
+            <table>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Student Email</th>
+                    <th>Actions</th>
+                </tr>
+        `;
 
-        let table = `<table><tr><th>Title</th><th>Date</th></tr>`;
-        snapshot.forEach((childSnapshot) => {
-            const appointment = childSnapshot.val();
-            table += `<tr><td>${appointment.title}</td><td>${appointment.date}</td></tr>`;
+        snapshot.forEach((child) => {
+            const data = child.val();
+            const key = child.key;
+
+            if (data.teacher_email === teacherEmail && data.status === "Pending") {
+                hasData = true;
+                tableContent += `
+                    <tr>
+                        <td>${data.student_name}</td>
+                        <td>${data.student_email}</td>
+                        <td>
+                            <button class="accept" onclick="acceptAppointment('${key}', '${data.student_email}')">Accept</button>
+                            <button class="deny" onclick="denyAppointment('${key}')">Deny</button>
+                        </td>
+                    </tr>
+                `;
+            }
         });
-        table += "</table>";
-        content.innerHTML = table;
+
+        tableContent += "</table>";
+        content.innerHTML = hasData ? tableContent : `<p class="no-data">No Pending Appointments</p>`;
     });
 };
 
-// View Messages
-window.viewMessages = () => {
+// Accept Appointment
+window.acceptAppointment = (key, studentEmail) => {
+    const appointmentRef = ref(database, `appointments/${key}`);
+    const teacherAcceptedRef = ref(database, `tea_users/${teacherEmail.replace(".", "_")}/acceptedAppointments`);
+    const studentAcceptedRef = ref(database, `std_users/${studentEmail.replace(".", "_")}/acceptedAppointments`);
+
+    onValue(appointmentRef, (snapshot) => {
+        const appointment = snapshot.val();
+
+        // Add to accepted appointments for teacher and student
+        push(teacherAcceptedRef, appointment);
+        push(studentAcceptedRef, appointment);
+
+        // Remove from pending appointments
+        remove(appointmentRef).then(() => {
+            alert("Appointment Accepted!");
+            viewMessages();
+        });
+    }, { onlyOnce: true });
+};
+
+// Deny Appointment
+window.denyAppointment = (key) => {
+    const appointmentRef = ref(database, `appointments/${key}`);
+    remove(appointmentRef).then(() => {
+        alert("Appointment Denied!");
+        viewMessages();
+    });
+};
+
+// View Accepted Appointments
+window.viewAcceptedAppointments = () => {
+    const content = document.getElementById("content");
+    content.innerHTML = "<h3>Accepted Appointments</h3>";
+
+    const teacherAcceptedRef = ref(database, `tea_users/${teacherEmail.replace(".", "_")}/acceptedAppointments`);
+    onValue(teacherAcceptedRef, (snapshot) => {
+        let hasData = false;
+        let tableContent = `
+            <table>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Student Email</th>
+                </tr>
+        `;
+
+        snapshot.forEach((child) => {
+            const data = child.val();
+            hasData = true;
+            tableContent += `
+                <tr>
+                    <td>${data.student_name}</td>
+                    <td>${data.student_email}</td>
+                </tr>
+            `;
+        });
+
+        tableContent += "</table>";
+        content.innerHTML = hasData ? tableContent : `<p class="no-data">No Accepted Appointments</p>`;
+    });
+};
+
+window.viewMessages1 = () => {
     const messagesRef = ref(database, `tea_users/${teacherDetails.key}/messages`);
     onValue(messagesRef, (snapshot) => {
         content.innerHTML = "<h3>Messages from Students</h3>";
@@ -82,3 +135,9 @@ window.viewMessages = () => {
         content.innerHTML = table;
     });
 };
+
+const logoutBtn = document.querySelector("#logout");
+logoutBtn.addEventListener("click", () => {
+    sessionStorage.clear();
+    window.location.href = "index.html";
+});

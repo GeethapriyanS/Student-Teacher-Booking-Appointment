@@ -29,6 +29,7 @@ stud_frm.addEventListener("submit", function (e) {
         .then(() => {
             alert("Registration Successful!");
             stud_frm.reset();
+            window.location.href = "student_dashboard.html";
         })
         .catch((error) => {
             console.error("Error adding student:", error);

@@ -138,3 +138,9 @@ window.denyStudent = (key) => {
         .then(() => alert("Student denied!"))
         .catch(err => console.error("Error:", err));
 };
+
+const logoutBtn = document.querySelector("#logout");
+logoutBtn.addEventListener("click", () => {
+    sessionStorage.clear();
+    window.location.href = "index.html";
+});
